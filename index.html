@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Census</title>
+    <link rel="stylesheet" href="main.css">
+    <!-- Ícone principal moderno (nítido em qualquer zoom) -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Fallback em PNG (32x32 ou 48x48 para navegadores mais antigos e Google) -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <!-- Ícone para iPhone/iPad quando salvam o site na tela inicial -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180x180.png" />
+    <!-- Seu PNG 512x512 entra no manifest.json (para Android e PWA) -->
+    <link rel="manifest" href="/site.webmanifest" />
+</head>
+<body>
+    <!-- Canvas para animação de confetes -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Cabeçalho Principal -->
+    <header class="game-header">
+        <button id="btn-home" class="icon-btn" title="Configurações" aria-label="Configurações">🏠</button>
+        <h1 id="current-theme-title">Carregando...</h1>
+        <button id="btn-reveal-all" class="icon-btn" title="Revelar tudo" aria-label="Revelar tudo">👀</button>
+    </header>
+
+    <!-- Área Principal do Jogo -->
+    <main class="game-container">
+        <!-- Barra de Palpite -->
+        <section class="guess-section">
+            <div class="input-with-btn">
+                <input type="text" id="guess-input" placeholder="Digite um palpite..." autocomplete="off" aria-label="Digite seu palpite">
+                <button id="btn-guess" class="icon-btn primary-icon" title="Verificar" aria-label="Verificar">👁️</button>
+            </div>
+        </section>
+
+        <!-- Lista Enumerada de Itens -->
+        <section class="list-section">
+            <ol id="top-list" class="top-list"></ol>
+        </section>
+    </main>
+
+    <!-- Modal 1: Configuração Inicial -->
+    <div id="modal-config" class="modal-overlay active">
+        <div class="modal-content">
+            <div class="modal-top-actions">
+                <button id="btn-help-config" class="close-modal-btn" title="Como jogar" aria-label="Como jogar">❔</button>
+                <button id="btn-close-config" class="close-modal-btn" title="Fechar" aria-label="Fechar">❌</button>
+            </div>
+            <h2>Census</h2>
+
+            <div class="form-group">
+                <label for="theme-combobox-input">Escolha ou sorteie um tema:</label>
+                <div class="input-with-btn">
+                    <div class="combobox-wrapper" id="theme-combobox">
+                        <input type="text" id="theme-combobox-input" placeholder="Selecione ou pesquise..." autocomplete="off">
+                        <button type="button" id="combobox-arrow" class="dropdown-arrow-btn" aria-label="Abrir lista">▼</button>
+                        <ul id="combobox-dropdown" class="combobox-dropdown"></ul>
+                    </div>
+                    <button type="button" id="btn-random-theme" class="icon-btn" title="Sortear novo tema" aria-label="Sortear novo tema">🔄</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <!-- <label>Modo de jogo:</label> -->
+                <span class="form-group-label">Modo de jogo:</span>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" id="mode-top10" name="game-mode" value="10" checked>
+                        <span>Lista com 10 itens</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" id="mode-top5" name="game-mode" value="5">
+                        <span>Lista com 5 itens</span>
+                    </label>
+                </div>
+            </div>
+
+            <button id="btn-start-game" class="primary-btn">Iniciar</button>
+        </div>
+    </div>
+
+    <!-- Modal 2: Confirmar Revelação Total -->
+    <div id="modal-confirm-reveal" class="modal-overlay">
+        <div class="modal-content">
+            <p class="modal-message">Tem certeza que deseja revelar todos os itens da lista?</p>
+            <div class="modal-actions">
+                <button id="btn-confirm-yes" class="action-btn primary">Sim</button>
+                <button id="btn-confirm-no" class="action-btn secondary">Não</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 3: Resposta Incorreta ("Não é top") -->
+    <div id="modal-wrong-guess" class="modal-overlay">
+        <div class="modal-content">
+            <p id="wrong-guess-text" class="modal-message"></p>
+            <div class="modal-actions">
+                <button id="btn-close-wrong" class="action-btn primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 4: Vitória (Todos os itens revelados) -->
+    <div id="modal-victory" class="modal-overlay">
+        <div class="modal-content">
+            <p class="modal-message victory-text">Todos os itens foram revelados!</p>
+            <div class="modal-actions">
+                <button id="btn-victory-home" class="action-btn secondary" title="Configurações">🏠</button>
+                <button id="btn-victory-next" class="action-btn primary" title="Próximo tema">🔄</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 5: Como Jogar / Regras -->
+    <div id="modal-help" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Como Jogar</h2>
+            <p class="modal-message help-text">
+                Ideal para jogar em viagens, enquanto aguarda o pedido no bar/restaurante, ou para aquecer a galera antes da <em>game night</em>.
+                <br><br>
+                Com dois ou mais jogadores, cada participante dá um palpite por vez sobre o tema da rodada. Se alguém duvidar da resposta, pode contestá-la e conferir na lista: se o palpite <strong>não</strong> fizer parte da lista, quem respondeu é eliminado; se <strong>estiver</strong> na lista, quem contestou é quem sai da rodada.
+                <br><br>
+                Vence o último jogador que restar!
+            </p>
+            <div class="modal-actions">
+                <button id="btn-close-help" class="action-btn primary">Voltar</button>
+            </div>
+        </div>
+    </div>    
+
+    <script src="themes.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
